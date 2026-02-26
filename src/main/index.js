@@ -241,24 +241,31 @@ Module._load = function (request, parent, isMain) {
                 });
 
                 let injected = false;
+                bw.webContents.on('did-start-navigation', (event, url, isInPlace, isMainFrame) => {
+                    if (isMainFrame && !isInPlace) injected = false;
+                });
                 const inject = () => {
                     if (injected) return;
                     if (!CORE_CODE) return;
-                    injected = true;
-                    const plugins = pluginLoader.getPlugins();
-                    const initScript = `
-                        window.__sleek_settings = ${JSON.stringify(settings.data)};
-                        window.__sleek_initial_plugins = ${JSON.stringify(plugins)};
-                    `;
                     
-                    bw.webContents.executeJavaScript(initScript).then(() => {
-                        bw.webContents.executeJavaScript(CORE_CODE);
-                    }).catch(e => {
-                        console.error('sleek | injection failed:', e);
+                    bw.webContents.executeJavaScript('window.sleek && window.sleek.active').then(active => {
+                        if (active) {
+                            injected = true;
+                            return;
+                        }
+                        injected = true;
+                        const plugins = pluginLoader.getPlugins();
+                        const initScript = `
+                            window.__sleek_settings = ${JSON.stringify(settings.data)};
+                            window.__sleek_initial_plugins = ${JSON.stringify(plugins)};
+                        `;
+                        bw.webContents.executeJavaScript(initScript).then(() => {
+                            bw.webContents.executeJavaScript(CORE_CODE);
+                        }).catch(e => {
+                            console.error('sleek | injection failed:', e);
+                        });
                     });
                 };
-
-                bw.webContents.on('did-start-navigation', () => { injected = false; });
                 bw.webContents.on('did-finish-load', inject);
                 bw.webContents.on('dom-ready', inject);
             });
