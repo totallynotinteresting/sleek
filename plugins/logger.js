@@ -25,18 +25,18 @@
     const style = document.createElement('style');
     style.id = 'sleek-logger-styles';
     style.textContent = `
-        .sleek-deleted .c-message_kit__background {
-            background: rgba(224, 30, 90, 0.08) !important;
-            border-left: 3px solid #e01e5a !important;
+        .sleek-deleted .c-message__sender_button,
+        .sleek-deleted .c-message__sender_link,
+        .sleek-deleted .c-message_kit__sender {
+            color: #e01e5a !important;
         }
-        .sleek-deleted .c-message_kit__blocks::after {
-            content: " [deleted]";
-            color: #e01e5a;
-            font-size: 0.8em;
-            font-style: italic;
+        .sleek-deleted .c-message__body,
+        .sleek-deleted .c-message_kit__blocks,
+        .sleek-deleted .p-rich_text_section {
+            color: #e01e5a !important;
         }
         .sleek-deleted {
-            opacity: 0.75 !important;
+            opacity: 0.70 !important;
         }
         .sleek-edit-history {
             padding: 2px 0;
