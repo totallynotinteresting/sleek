@@ -8,6 +8,7 @@
   "license": "totally not interesting license",
   "scripts": {
     "patch": "node scripts/patch.js",
+    "unpatch": "node scripts/unpatch.js",
     "build": "mkdir -p dist && cp src/main/index.js dist/sleek-main.js && cp src/preload/index.js dist/sleek-preload.js && cp src/renderer/index.js dist/sleek-core.js",
     "dev": "npm run patch && ELECTRON_ENABLE_LOGGING=1 ~/Downloads/Slack.app/Contents/MacOS/Slack --enable-logging"
   },
