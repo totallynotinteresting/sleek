@@ -8,7 +8,20 @@
     const deletedTs = new Set();
     const messageHistory = new Map();
     let pendingDeleteTs = null;
-
+    const userNameCache = new Map();
+    const formatSlackText = (text) => { return text.replace(/<@(U[A-Z0-9]+)(?:\|([^>]+))?>/g, (_, uid, name) => {
+                if (name) return `@${name}`;
+                if (userNameCache.has(uid)) return `@${userNameCache.get(uid)}`;
+                const profileEl = document.querySelector(`[data-message-sender="${uid}"]`);
+                const btnEl = profileEl?.querySelector('button.c-message_kit__avatar');
+                const displayName = btnEl?.getAttribute('aria-label') || profileEl?.querySelector('.c-message__sender_button')?.textContent;
+                if (displayName) { userNameCache.set(uid, displayName); return `@${displayName}`; }
+                return `@${uid}`;
+            }).replace(/<#[A-Z0-9]+\|([^>]+)>/g, '#$1').replace(/<#([A-Z0-9]+)>/g, '#$1')
+            .replace(/<!here>/g, '@here').replace(/<!channel>/g, '@channel')
+            .replace(/<!everyone>/g, '@everyone').replace(/<(https?:\/\/[^|>]+)\|([^>]+)>/g, '$2')
+            .replace(/<(https?:\/\/[^>]+)>/g, '$1');
+    }
     const style = document.createElement('style');
     style.id = 'sleek-logger-styles';
     style.textContent = `
@@ -119,7 +132,7 @@
         for (let i = 0; i < history.length; i++) {
             const histEl = document.createElement('div');
             histEl.className = 'sleek-edit-history';
-            histEl.textContent = history[i];
+            histEl.textContent = formatSlackText(history[i]);
             blocksEl.insertBefore(histEl, blocksEl.firstChild);
         }
     };
