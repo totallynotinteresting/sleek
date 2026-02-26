@@ -192,7 +192,7 @@ Module._load = function (request, parent, isMain) {
                 const p = path.join(app.getPath('userData'), filename || 'sleek-debug.html');
                 fs.writeFileSync(p, data);
             });
-
+            ipcMain.on('sleek-open-devtools', (event) => { event.sender.openDevTools(); })
             fs.watch(pluginLoader.pluginsPath, (eventType, filename) => {
                 if (filename && filename.endsWith('.js')) {
                     BrowserWindow.getAllWindows().forEach(bw => {

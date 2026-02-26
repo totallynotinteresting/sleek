@@ -55,7 +55,8 @@
             e.stopImmediatePropagation();
             const link = getMessageLink(actionBar);
             if (!link) return;
-            const composer = document.querySelector('.ql-editor');
+            const threadPanel = actionBar.closest('.p-flexpane__inside_body_scrollbar, .p-threads_flexpane, .p-thread_view');
+            const composer = threadPanel ? threadPanel.querySelector('.ql-editor') : document.querySelector('.p-workspace__primary_view .ql-editor') || document.querySelector('.ql-editor');
             if (composer) {
                 composer.focus();
                 setTimeout(() => {

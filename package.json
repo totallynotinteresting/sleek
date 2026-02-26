@@ -1,6 +1,6 @@
 {
   "name": "sleek",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NOT the cutest client mod for slack",
   "main": "src/main/index.js",
   "author": "totallynotinteresting <nerd@hack.ngo>",

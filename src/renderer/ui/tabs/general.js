@@ -49,7 +49,7 @@ function renderGeneralTab(panel) {
         alert('sleek | debug info dumped to sleek-debug.html in Slack userData folder');
     }));
     actions.appendChild(makeBtn('open devtools', () => {
-        if (window.sleekBridge) window.sleekBridge.setSetting('__open_devtools', true);
+        if (window.sleekBridge) window.sleekBridge.send('sleek-open-devtools');
     }));
 
     const plist = panel.querySelector('#sleek-general-plugin-list');
