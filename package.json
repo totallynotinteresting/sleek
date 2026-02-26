@@ -1,0 +1,19 @@
+{
+  "name": "sleek",
+  "version": "0.1.0",
+  "description": "NOT the cutest client mod for slack",
+  "main": "src/main/index.js",
+  "author": "totallynotinteresting <nerd@hack.ngo>",
+  "repository": "https://github.com/totallynotinteresting/sleek",
+  "license": "totally not interesting license",
+  "scripts": {
+    "patch": "node scripts/patch.js",
+    "build": "mkdir -p dist && cp src/main/index.js dist/sleek-main.js && cp src/preload/index.js dist/sleek-preload.js && cp src/renderer/index.js dist/sleek-core.js",
+    "dev": "npm run patch && ELECTRON_ENABLE_LOGGING=1 ~/Downloads/Slack.app/Contents/MacOS/Slack --enable-logging"
+  },
+  "dependencies": {
+    "@electron/fuses": "^1.8.0",
+    "asar": "^3.2.0",
+    "fs-extra": "^11.1.1"
+  }
+}

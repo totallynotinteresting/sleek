@@ -1,0 +1,44 @@
+:root, .sleek-app.sleek-theme-active {
+    --sk_primary_background: transparent !important;
+    --dt_color-base-primary: transparent !important;
+}
+.sleek-app.sleek-theme-active {
+    background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%) !important;
+}
+.sleek-app.sleek-theme-active .sleek-client,
+.sleek-app.sleek-theme-active .sleek-layout,
+.sleek-app.sleek-theme-active .sleek-workspace,
+.sleek-app.sleek-theme-active .sleek-main-view,
+.sleek-app.sleek-theme-active .sleek-bg-layer,
+.sleek-app.sleek-theme-active .p-theme_background {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+.sleek-app.sleek-theme-active .sleek-sidebar, 
+.sleek-app.sleek-theme-active .sleek-topbar, 
+.sleek-app.sleek-theme-active .sleek-input-area,
+.sleek-app.sleek-theme-active .sleek-tab-rail {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: none !important;
+}
+
+.sleek-app.sleek-theme-active .sleek-sidebar {
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.sleek-app.sleek-theme-active .sleek-topbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.sleek-app.sleek-theme-active .sleek-input-area {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    margin: 12px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+:root {
+    --slack-accent: #bb9af7;
+}

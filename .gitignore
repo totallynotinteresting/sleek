@@ -1,0 +1,11 @@
+node_modules/
+dist/
+temp_asar*/
+temp_inspect*/
+temp/
+*.log
+sleek.log
+.DS_Store
+scripts/backups/*.bak
+!scripts/backups/.gitkeep
+scripts/temp_asar/
