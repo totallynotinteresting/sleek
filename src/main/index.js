@@ -258,6 +258,7 @@ Module._load = function (request, parent, isMain) {
                     });
                 };
 
+                bw.webContents.on('did-start-navigation', () => { injected = false; });
                 bw.webContents.on('did-finish-load', inject);
                 bw.webContents.on('dom-ready', inject);
             });

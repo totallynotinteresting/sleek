@@ -102,21 +102,25 @@ const hookCode = `
 })();
 `;
 
-try {
-    webFrame.executeJavaScript(hookCode);
-    console.log('sleek | early hooks injected');
-} catch (e) {
-    console.error('sleek | early hook injection failed:', e);
-}
+const isMainFrame = webFrame.top === webFrame;
 
-try {
-    contextBridge.exposeInMainWorld('sleekBridge', {
-        send: (channel, data) => ipcRenderer.send(channel, data),
-        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
-        setSetting: (key, value) => ipcRenderer.send('sleek-set-setting', { key, value }),
-        getSettings: () => ipcRenderer.invoke('sleek-get-settings'),
-        getPlugins: () => ipcRenderer.invoke('sleek-get-plugins')
-    });
-} catch (e) {
-    console.error('sleek | bridge exposure failed:', e);
+if (isMainFrame) {
+    try {
+        webFrame.executeJavaScript(hookCode);
+        console.log('sleek | early hooks injected');
+    } catch (e) {
+        console.error('sleek | early hook injection failed:', e);
+    }
+
+    try {
+        contextBridge.exposeInMainWorld('sleekBridge', {
+            send: (channel, data) => ipcRenderer.send(channel, data),
+            invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+            setSetting: (key, value) => ipcRenderer.send('sleek-set-setting', { key, value }),
+            getSettings: () => ipcRenderer.invoke('sleek-get-settings'),
+            getPlugins: () => ipcRenderer.invoke('sleek-get-plugins')
+        });
+    } catch (e) {
+        console.error('sleek | bridge exposure failed:', e);
+    }
 }
