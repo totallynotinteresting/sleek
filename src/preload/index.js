@@ -33,6 +33,9 @@ const hookCode = `
     const origAEL = origProto.addEventListener;
     origProto.addEventListener = function(type, listener, options) {
         if (type === 'message' && listener) {
+            if (!this.__sleek_msg_listeners) this.__sleek_msg_listeners = [];
+            this.__sleek_msg_listeners.push(listener);
+            
             const wrapped = function(event) {
                 const result = processData(event.data, 'in');
                 if (result === null) return;
@@ -91,12 +94,52 @@ const hookCode = `
             const token = u.searchParams.get('token');
             if (token) window.__sleek_api_token = token;
         } catch(e) {}
-        return new OriginalWS(url, protocols);
+        const ws = new OriginalWS(url, protocols);
+        window.__sleek_active_ws = ws;
+        return ws;
     };
     Object.assign(window.WebSocket, OriginalWS);
     window.WebSocket.prototype = origProto;
 
+    window.__sleek_inject_ws_message = function(dataStr) {
+        if (!window.__sleek_active_ws) return;
+        const fakeEvent = new MessageEvent('message', {
+            data: dataStr,
+            origin: 'wss://wss-primary.slack.com',
+            lastEventId: '',
+            source: null,
+            ports: []
+        });
+        Object.defineProperty(fakeEvent, 'isTrusted', { value: true, enumerable: true });
+        
+        const ws = window.__sleek_active_ws;
+        if (typeof ws.__sleek_onmsg_orig === 'function') {
+            try { ws.__sleek_onmsg_orig.call(ws, fakeEvent); } catch(e) { console.error('sleek | inject error onmsg:', e); }
+        }
+        if (ws.__sleek_msg_listeners) {
+            ws.__sleek_msg_listeners.forEach(l => {
+                try {
+                    if (typeof l === 'function') l.call(ws, fakeEvent);
+                    else if (l && l.handleEvent) l.handleEvent(fakeEvent);
+                } catch(e) { console.error('sleek | inject error listener:', e); }
+            });
+        }
+    };
+
     window.__sleek_original_fetch = window.fetch;
+    const origRemoveChild = Node.prototype.removeChild;
+    Node.prototype.removeChild = function(child) {
+        if (child && child.parentNode !== this) return child;
+        return origRemoveChild.apply(this, arguments);
+    };
+
+    const origInsertBefore = Node.prototype.insertBefore;
+    Node.prototype.insertBefore = function(newNode, refNode) {
+        if (refNode && refNode.parentNode !== this) {
+            return origInsertBefore.call(this, newNode, null);
+        }
+        return origInsertBefore.apply(this, arguments);
+    };
 
     console.log('sleek | early hooks injected');
 })();

@@ -17,7 +17,7 @@
         for (const [selector, className] of Object.entries(MAPPINGS)) {
             const elements = root.querySelectorAll(selector);
             if (elements.length > 0) {
-                console.log(`sleek | mapping: found ${elements.length} for ${selector} -> ${className}`);
+                //console.log(`sleek | mapping: found ${elements.length} for ${selector} -> ${className}`);
             }
             elements.forEach(el => {
                 if (!el.classList.contains(className)) {

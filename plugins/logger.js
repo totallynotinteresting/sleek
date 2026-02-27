@@ -5,8 +5,14 @@
         description: 'a clone of vencords message logger but on slack?!?!?',
     });
 
-    const deletedTs = new Set();
-    const messageHistory = new Map();
+    const loadSet = (k) => { try { return new Set(JSON.parse(localStorage.getItem(k)||'[]')); } catch{ return new Set(); }};
+    const saveSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify([...v])); } catch{} };
+    const loadMap = (k) => { try { return new Map(JSON.parse(localStorage.getItem(k)||'[]')); } catch{ return new Map(); }};
+    const saveMap = (k, v) => { try { localStorage.setItem(k, JSON.stringify([...v])); } catch{} };
+
+    const deletedTs = loadSet('sleek-logger-deleted-ts');
+    const clearedTs = loadSet('sleek-logger-cleared-ts');
+    const messageHistory = loadMap('sleek-logger-history');
     let pendingDeleteTs = null;
     const userNameCache = new Map();
     const formatSlackText = (text) => { return text.replace(/<@(U[A-Z0-9]+)(?:\|([^>]+))?>/g, (_, uid, name) => {
@@ -54,6 +60,12 @@
             font-style: italic;
             margin-left: 4px;
         }
+        .sleek-logger-menu-item .c-menu_item__button:hover {
+            background: var(--slack-color-neutral-05, rgba(29, 28, 29, 0.04)) !important;
+        }
+        .sleek-logger-menu-item .c-menu_item__button:active {
+            background: var(--slack-color-neutral-10, rgba(29, 28, 29, 0.08)) !important;
+        }
     `;
     const onClickCapture = (e) => {
         const deleteBtn = e.target.closest('.c-dialog__go[aria-label="Delete"]');
@@ -85,9 +97,20 @@
         if (closeBtn) closeBtn.click();
         else if (dialog) dialog.remove();
         const msgEl = document.querySelector(`[data-item-key="${ts}"]`);
-        const channelEl = msgEl?.querySelector('[data-msg-channel-id]');
-        const channel = channelEl?.dataset?.msgChannelId ||
-            document.querySelector('[data-msg-channel-id]')?.dataset?.msgChannelId || '';
+        
+        let channel = msgEl?.dataset?.msgChannelId || msgEl?.closest('[data-msg-channel-id]')?.dataset?.msgChannelId;
+        if (!channel && msgEl) {
+            const tsLink = msgEl.querySelector('a.c-timestamp[data-ts], a[href*="/archives/"]');
+            if (tsLink && tsLink.href) {
+                const match = tsLink.href.match(/\/archives\/([A-Z0-9]+)/);
+                if (match) channel = match[1];
+            }
+        }
+        if (!channel) {
+            const urlMatch = window.location.pathname.match(/\/(?:client\/[A-Z0-9]+\/|archives\/|messages\/)([A-Z0-9]+)/);
+            if (urlMatch) channel = urlMatch[1];
+        }
+        channel = channel || document.querySelector('[data-msg-channel-id]')?.dataset?.msgChannelId || '';
 
         const token = window.__sleek_api_token || '';
         if (channel && token) {
@@ -141,6 +164,7 @@
         if (data.type === 'message' && data.subtype === 'message_deleted') {
             const ts = data.deleted_ts;
             deletedTs.add(ts);
+            saveSet('sleek-logger-deleted-ts', deletedTs);
             setTimeout(() => {
                 const el = document.querySelector(`[data-item-key="${ts}"]`);
                 if (el) el.classList.add('sleek-deleted');
@@ -156,6 +180,7 @@
                 if (!isReplyLink) {
                     if (!messageHistory.has(ts)) messageHistory.set(ts, []);
                     messageHistory.get(ts).push(prev.text);
+                    saveMap('sleek-logger-history', messageHistory);
                     setTimeout(() => injectEditHistory(ts), 300);
                 }}}
         return data
@@ -173,7 +198,120 @@
                 el.classList.add('sleek-deleted')
             }
         });
-        messageHistory.forEach((_, ts) => injectEditHistory(ts))
+        clearedTs.forEach(ts => {
+            const el = document.querySelector(`[data-item-key="${ts}"]`);
+            if (el) {
+                el.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; min-height: 0 !important; border: none !important;';
+                const row = el.closest('[role="listitem"]');
+                if (row) row.style.cssText = 'display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important;';
+            }
+        });
+        messageHistory.forEach((_, ts) => {
+            if (!clearedTs.has(ts)) injectEditHistory(ts);
+            else {
+                const el = document.querySelector(`[data-item-key="${ts}"]`);
+                if (el) el.querySelectorAll('.sleek-edit-history').forEach(e => e.style.cssText = 'display: none !important;');
+            }
+        })
+    };
+
+    let activeMenuTs = null;
+
+    const injectMenuItem = (menu) => {
+        if (menu.querySelector('.sleek-logger-menu-item')) return;
+        const ts = activeMenuTs;
+        if (!ts || (!deletedTs.has(ts) && !messageHistory.has(ts))) return;
+
+        const container = menu.querySelector('.c-menu__items') || menu.querySelector('[role="menu"]');
+        if (!container) return;
+
+        // Clone an existing item to match native look perfectly
+        const existingItem = container.querySelector('.c-menu_item__li');
+        if (!existingItem) return;
+
+        const separator = document.createElement('div');
+        separator.className = 'c-menu_separator__li c-menu_separator__li--no_first_child';
+        separator.innerHTML = `<hr class="c-menu_separator__separator">`;
+        container.appendChild(separator);
+
+        const item = existingItem.cloneNode(true);
+        item.classList.add('sleek-logger-menu-item');
+        item.classList.remove('c-menu_item--hovered', 'c-menu_item--highlighted');
+        const innerBtn = item.querySelector('.c-menu_item__button');
+        if (innerBtn) innerBtn.classList.remove('c-menu_item__button--hovered', 'c-menu_item__button--highlighted');
+        
+        const label = item.querySelector('.c-menu_item__label');
+        if (label) label.textContent = 'Clear history';
+        
+        const icon = item.querySelector('.c-menu_item__icon');
+        if (icon) icon.remove();
+        
+        const shortcut = item.querySelector('.c-menu_item__shortcut');
+        if (shortcut) shortcut.remove();
+
+        item.onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const isDeleted = deletedTs.has(ts);
+            
+            if (isDeleted) {
+                deletedTs.delete(ts);
+                clearedTs.add(ts);
+                saveSet('sleek-logger-deleted-ts', deletedTs);
+                saveSet('sleek-logger-cleared-ts', clearedTs);
+
+                const msgEl = document.querySelector(`[data-item-key="${ts}"]`);
+                if (msgEl) {
+                    msgEl.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; min-height: 0 !important; border: none !important;';
+                    // Optional: hide the outer virtual list container row if possible, though hiding msgEl is usually enough
+                    const row = msgEl.closest('[role="listitem"]');
+                    if (row) row.style.cssText = 'display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important;';
+                }
+            } else {
+                messageHistory.delete(ts);
+                clearedTs.add(ts);
+                saveMap('sleek-logger-history', messageHistory);
+                saveSet('sleek-logger-cleared-ts', clearedTs);
+                const msg = document.querySelector(`[data-item-key="${ts}"]`);
+                if (msg) {
+                    msg.classList.remove('sleek-deleted');
+                    msg.querySelectorAll('.sleek-edit-history').forEach(el => {
+                        el.style.cssText = 'display: none !important;';
+                    });
+                }
+            }
+
+            // Close menu natively using Escape key
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+            
+            setTimeout(() => {
+                const composer = document.querySelector('.ql-editor');
+                if (composer) {
+                    composer.focus();
+                } else {
+                    document.body.focus();
+                }
+            }, 50);
+        };
+
+        container.appendChild(item);
+    };
+
+    const onActionsClick = (e) => {
+        const moreBtn = e.target.closest('[data-qa="more_message_actions"]') || e.target.closest('[aria-label="More actions"]');
+        if (!moreBtn) return;
+        const msg = moreBtn.closest('[data-item-key]');
+        if (msg) {
+            activeMenuTs = msg.dataset.itemKey;
+            console.log('sleek | tracking overflow menu for:', activeMenuTs);
+        }
+    };
+
+    const onContextMenu = (e) => {
+        const msg = e.target.closest('[data-item-key]');
+        if (msg) {
+            activeMenuTs = msg.dataset.itemKey;
+            console.log('sleek | tracking context menu for:', activeMenuTs);
+        }
     };
 
     let observer = null;
@@ -183,6 +321,8 @@
         document.head.appendChild(style);
         document.addEventListener('click', onClickCapture, true);
         document.addEventListener('click', onContextMenuClick, true);
+        document.addEventListener('mousedown', onActionsClick, true);
+        document.addEventListener('contextmenu', onContextMenu, true);
 
         sleek.bus.on('ws-before-message', onBeforeMessage);
         sleek.bus.on('ws-message', (data) => onMessage(data, 'in'));
@@ -194,6 +334,10 @@
             for (const mutation of mutations) {
                 for (const added of mutation.addedNodes) {
                     if (added.nodeType !== 1) continue;
+                    
+                    if (added.classList.contains('p-message_actions_menu')) injectMenuItem(added);
+                    else added.querySelectorAll?.('.p-message_actions_menu').forEach(injectMenuItem);
+
                     const key = added.dataset?.itemKey;
                     if (key && deletedTs.has(key)) added.classList.add('sleek-deleted');
                     if (key && messageHistory.has(key)) injectEditHistory(key);
