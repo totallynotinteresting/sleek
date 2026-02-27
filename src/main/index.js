@@ -237,6 +237,14 @@ Module._load = function (request, parent, isMain) {
                             bw.webContents.toggleDevTools();
                             event.preventDefault();
                         }
+
+                        // cmd/ctrl+alt+s to toggle sleek on/off
+                        if (isCmd && isAlt && input.code === 'KeyS') {
+                            const disabled = !settings.get('sleek-disabled', false);
+                            settings.set('sleek-disabled', disabled);
+                            bw.webContents.reload();
+                            event.preventDefault();
+                        }
                     }
                 });
 
@@ -247,7 +255,8 @@ Module._load = function (request, parent, isMain) {
                 const inject = () => {
                     if (injected) return;
                     if (!CORE_CODE) return;
-                    
+                    if (settings.get('sleek-disabled', false)) return;
+
                     bw.webContents.executeJavaScript('window.sleek && window.sleek.active').then(active => {
                         if (active) {
                             injected = true;
