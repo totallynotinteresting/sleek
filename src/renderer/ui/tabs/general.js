@@ -52,6 +52,24 @@ function renderGeneralTab(panel) {
         if (window.sleekBridge) window.sleekBridge.send('sleek-open-devtools');
     }));
 
+    const isMac = navigator.platform.includes('Mac');
+    const shortcut = isMac ? '⌘⌥S' : 'Ctrl+Alt+S';
+    const disableBtn = makeBtn('disable sleek', () => {
+        window.sleekBridge.send('sleek-set-setting', { key: 'sleek-disabled', value: true });
+        location.reload();
+    });
+    disableBtn.style.background = 'rgba(224,30,90,0.15)';
+    disableBtn.style.borderColor = 'rgba(224,30,90,0.3)';
+    disableBtn.style.color = '#e01e5a';
+    disableBtn.addEventListener('mouseenter', () => { disableBtn.style.background = 'rgba(224,30,90,0.25)'; });
+    disableBtn.addEventListener('mouseleave', () => { disableBtn.style.background = 'rgba(224,30,90,0.15)'; });
+    actions.appendChild(disableBtn);
+
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size: 12px; opacity: 0.4; margin-top: 8px;';
+    hint.textContent = `use ${shortcut} to toggle sleek on/off`;
+    actions.appendChild(hint);
+
     const plist = panel.querySelector('#sleek-general-plugin-list');
     pluginManager.plugins.forEach(p => {
         const dot = p.active ? '●' : '○';
