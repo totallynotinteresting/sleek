@@ -141,6 +141,13 @@
             }
         }
     };
+    const hideElement = (el) => {
+        if (!el) return;
+        el.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; min-height: 0 !important; border: none !important;';
+        const row = el.closest('[role="listitem"]');
+        if (row) row.style.cssText = 'display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important;';
+    };
+
     const injectEditHistory = (ts) => {
         const history = messageHistory.get(ts);
         if (!history || history.length === 0) return;
@@ -200,11 +207,7 @@
         });
         clearedTs.forEach(ts => {
             const el = document.querySelector(`[data-item-key="${ts}"]`);
-            if (el) {
-                el.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; min-height: 0 !important; border: none !important;';
-                const row = el.closest('[role="listitem"]');
-                if (row) row.style.cssText = 'display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important;';
-            }
+            if (el) hideElement(el);
         });
         messageHistory.forEach((_, ts) => {
             if (!clearedTs.has(ts)) injectEditHistory(ts);
@@ -261,10 +264,7 @@
 
                 const msgEl = document.querySelector(`[data-item-key="${ts}"]`);
                 if (msgEl) {
-                    msgEl.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; min-height: 0 !important; border: none !important;';
-                    // Optional: hide the outer virtual list container row if possible, though hiding msgEl is usually enough
-                    const row = msgEl.closest('[role="listitem"]');
-                    if (row) row.style.cssText = 'display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important;';
+                    hideElement(msgEl);
                 }
             } else {
                 messageHistory.delete(ts);
@@ -340,10 +340,12 @@
 
                     const key = added.dataset?.itemKey;
                     if (key && deletedTs.has(key)) added.classList.add('sleek-deleted');
+                    if (key && clearedTs.has(key)) hideElement(added);
                     if (key && messageHistory.has(key)) injectEditHistory(key);
                     added.querySelectorAll?.('[data-item-key]').forEach(el => {
                         const ts = el.dataset.itemKey;
                         if (ts && deletedTs.has(ts)) el.classList.add('sleek-deleted');
+                        if (ts && clearedTs.has(ts)) hideElement(el);
                         if (ts && messageHistory.has(ts)) injectEditHistory(ts);
                     });
                 }

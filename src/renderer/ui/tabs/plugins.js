@@ -3,9 +3,14 @@ function renderPluginsTab(panel) {
         <div style="padding: 32px; color: #fff; font-family: Slack-Lato, appleLogo, sans-serif;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                 <h1 style="font-size: 28px; font-weight: 900; margin: 0;">plugins</h1>
-                <button id="sleek-reload-plugins" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700;">
-                    reload
-                </button>
+                <div>
+                    <button id="sleek-open-plugins-folder" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; margin-right: 8px;">
+                        open folder
+                    </button>
+                    <button id="sleek-reload-plugins" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700;">
+                        reload
+                    </button>
+                </div>
             </div>
             <div id="sleek-plugin-list" style="margin-top: 24px;"></div></div>`;
 
@@ -41,4 +46,14 @@ function renderPluginsTab(panel) {
         await pluginManager.reload();
         renderPluginsTab(panel);
     });
+    panel.querySelector('#sleek-open-plugins-folder').onclick = () => {
+        console.error('sleek | clicking open plugins folder');
+        console.error('sleek | bridge keys:', window.sleekBridge ? Object.keys(window.sleekBridge) : 'no bridge');
+        if (window.sleekBridge && window.sleekBridge.openPluginsFolder) {
+            console.error('sleek | calling bridge.openPluginsFolder');
+            window.sleekBridge.openPluginsFolder();
+        } else {
+            console.error('sleek | bridge or openPluginsFolder missing');
+        }
+    };
 }

@@ -159,7 +159,7 @@ Module._load = function (request, parent, isMain) {
     const exports = originalLoad.apply(this, arguments);
     
     if (request === 'electron') {
-        const { app, ipcMain, BrowserWindow } = exports;
+        const { app, ipcMain, BrowserWindow, shell } = exports;
 
         if (app && !app.__sleek_hooked) {
             app.__sleek_hooked = true;
@@ -193,6 +193,21 @@ Module._load = function (request, parent, isMain) {
                 fs.writeFileSync(p, data);
             });
             ipcMain.on('sleek-open-devtools', (event) => { event.sender.openDevTools(); })
+            ipcMain.on('sleek-open-plugins-folder', () => {
+                console.log('sleek | ipc hit: open-plugins-folder');
+                const { shell } = require('electron');
+                if (shell && shell.openPath) shell.openPath(pluginLoader.pluginsPath).catch(err => console.error(err));
+            });
+            ipcMain.on('sleek-open-themes-folder', () => {
+                console.log('sleek | ipc hit: open-themes-folder');
+                const { shell } = require('electron');
+                if (shell && shell.openPath) shell.openPath(themeManager.themesPath).catch(err => console.error(err));
+            });
+            ipcMain.on('sleek-open-quick-css', () => {
+                console.log('sleek | ipc hit: open-quick-css');
+                const { shell } = require('electron');
+                if (shell && shell.openPath) shell.openPath(themeManager.quickCSSPath).catch(err => console.error(err));
+            });
             fs.watch(pluginLoader.pluginsPath, (eventType, filename) => {
                 if (filename && filename.endsWith('.js')) {
                     BrowserWindow.getAllWindows().forEach(bw => {

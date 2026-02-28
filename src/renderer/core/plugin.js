@@ -34,7 +34,7 @@ class PluginManager {
         if (!plugin || !plugin.meta) return;
         this.plugins.set(id, plugin);
         setTimeout(() => {
-            if (settings.get(`plugin-${id}-enabled`, true) && !plugin.active) {
+            if (settings.get(`plugin-${id}-enabled`, false) && !plugin.active) {
                 plugin.start();
             }
         }, 0);

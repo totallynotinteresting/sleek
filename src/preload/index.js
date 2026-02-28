@@ -154,16 +154,19 @@ if (isMainFrame) {
     } catch (e) {
         console.error('sleek | early hook injection failed:', e);
     }
+}
 
-    try {
-        contextBridge.exposeInMainWorld('sleekBridge', {
-            send: (channel, data) => ipcRenderer.send(channel, data),
-            invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
-            setSetting: (key, value) => ipcRenderer.send('sleek-set-setting', { key, value }),
-            getSettings: () => ipcRenderer.invoke('sleek-get-settings'),
-            getPlugins: () => ipcRenderer.invoke('sleek-get-plugins')
-        });
-    } catch (e) {
-        console.error('sleek | bridge exposure failed:', e);
-    }
+try {
+    contextBridge.exposeInMainWorld('sleekBridge', {
+        send: (channel, data) => ipcRenderer.send(channel, data),
+        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+        setSetting: (key, value) => ipcRenderer.send('sleek-set-setting', { key, value }),
+        getSettings: () => ipcRenderer.invoke('sleek-get-settings'),
+        getPlugins: () => ipcRenderer.invoke('sleek-get-plugins'),
+        openPluginsFolder: () => ipcRenderer.send('sleek-open-plugins-folder'),
+        openThemesFolder: () => ipcRenderer.send('sleek-open-themes-folder'),
+        openQuickCSS: () => ipcRenderer.send('sleek-open-quick-css')
+    });
+} catch (e) {
+    console.error('sleek | bridge exposure failed:', e);
 }

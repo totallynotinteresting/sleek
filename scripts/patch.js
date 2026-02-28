@@ -96,6 +96,7 @@ async function patchAsar(asarPath, label, userDataPath) {
         
         content = content.replace(/\/\* ---sleek \*\/[\s\S]*\/\* sleek--- \*\/\n?/g, '');
         content = content.replace(/require\(.*sleek-(main|preload|core)\.js.*\);\n?/g, '');
+        content = content.replace(/try\s*\{\s*contextBridge\.exposeInMainWorld\('sleekBridge'[\s\S]*?console\.error\('sleek \| bridge exposure failed:'[^}]*\}\n?/g, '');
         
         const hook = `/* ---sleek */\n(function() {\n${preloadCode}\n})();\n/* sleek--- */\n`;
         await fs.writeFile(nativePreloadPath, hook + content);
